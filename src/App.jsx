@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import Section from './components/Section/Section';
 import ContactForm from './components/ContactForm/ContactForm';
@@ -13,48 +13,54 @@ const LIST_CONTACTS = [
   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
 ];
 
-export default class App extends Component {
-  state = {
-    contacts: LIST_CONTACTS,
-    filter: '',
-  };
+export default function App() {
+  const [contacts, setContacts] = useState(LIST_CONTACTS);
+  const [filter, setFilter] = useState('');
 
-  formSubmitHandler = ({ name, number }) => {
+  useEffect(() => {
+    const storage = window.localStorage.getItem('contacts');
+    const parselContacts = JSON.parse(storage);
+    if (parselContacts) {
+      setContacts(parselContacts);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  const formSubmitHandler = (name, number) => {
     const contact = {
       id: nanoid(),
       name,
       number,
     };
 
-    this.addContact(contact);
+    addContact(contact);
   };
 
-  addContact = contact => {
-    const { contacts } = this.state;
+  const addContact = contact => {
     const { name } = contact;
 
-    if (this.isExist(contacts, name)) {
+    if (isExist(contacts, name)) {
       alert(`${name} is already in contacts.`);
       return;
     }
 
-    this.setState(({ contacts }) => ({
-      contacts: [contact, ...contacts],
-    }));
+    setContacts([contact, ...contacts]);
   };
 
-  isExist = (contacts, name) => {
+  const isExist = (contacts, name) => {
     return contacts.find(
       contact => contact.name.toLowerCase() === name.toLowerCase()
     );
   };
 
-  handlerFilterChange = e => {
-    this.setState({ filter: e.currentTarget.value });
+  const handlerFilterChange = e => {
+    setFilter(e.currentTarget.value);
   };
 
-  getVisibleContact = () => {
-    const { contacts, filter } = this.state;
+  const getVisibleContact = () => {
     const normalizedFilter = filter.toLowerCase();
 
     return contacts.filter(contact =>
@@ -62,59 +68,39 @@ export default class App extends Component {
     );
   };
 
-  DisplayAll = () => {
-    this.setState({ filter: '' });
+  const displayAll = () => {
+    setFilter('');
   };
 
-  deleteContact = id => {
-    this.setState(({ contacts }) => ({
-      contacts: contacts.filter(contact => contact.id !== id),
-    }));
+  const deleteContact = id => {
+    setContacts(contacts.filter(contact => contact.id !== id));
   };
 
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parselContacts = JSON.parse(contacts);
+  const visibleContact = getVisibleContact();
 
-    if (parselContacts) {
-      this.setState({ contacts: parselContacts });
-    }
-  }
+  return (
+    <>
+      <Section title="Phonebook">
+        <ContactForm onFormHandler={formSubmitHandler} />
+      </Section>
 
-  componentDidUpdate(prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
-
-  render() {
-    const { contacts, filter } = this.state;
-    const visibleContact = this.getVisibleContact();
-
-    return (
-      <>
-        <Section title="Phonebook">
-          <ContactForm onFormHandler={this.formSubmitHandler} />
-        </Section>
-
-        <Section title="Contacts">
-          {contacts.length !== 0 ? (
-            <>
-              <Filter
-                value={filter}
-                onHandlerFilterChange={this.handlerFilterChange}
-                onDisplayAll={this.DisplayAll}
-              />
-              <ContactList
-                contacts={visibleContact}
-                onDeleteContact={this.deleteContact}
-              />
-            </>
-          ) : (
-            <Notification message="The contact list is empty" />
-          )}
-        </Section>
-      </>
-    );
-  }
+      <Section title="Contacts">
+        {contacts.length !== 0 ? (
+          <>
+            <Filter
+              value={filter}
+              onHandlerFilterChange={handlerFilterChange}
+              onDisplayAll={displayAll}
+            />
+            <ContactList
+              contacts={visibleContact}
+              onDeleteContact={deleteContact}
+            />
+          </>
+        ) : (
+          <Notification message="The contact list is empty" />
+        )}
+      </Section>
+    </>
+  );
 }

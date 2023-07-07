@@ -1,78 +1,83 @@
-import React, { Component } from 'react';
+import { useState, useRef } from 'react';
 import { nanoid } from 'nanoid';
 import PropTypes from 'prop-types';
 import css from './ContactForm.module.css';
 
-const INITIAL_STATE = {
+const INITIAL = {
   name: '',
   number: '',
 };
 
-export default class ContactForm extends Component {
-  state = {
-    ...INITIAL_STATE,
-  };
+export default function ContactForm({ onFormHandler }) {
+  const [name, setName] = useState(INITIAL.name);
+  const [number, setNumber] = useState(INITIAL.number);
 
-  nameInputId = nanoid();
-  numberInputId = nanoid();
+  const nameInputId = useRef(nanoid());
+  const numberInputId = useRef(nanoid());
 
-  handleInputChange = e => {
+  const handleInputChange = e => {
     const { name, value } = e.currentTarget;
-    this.setState({ [name]: value });
+
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'number':
+        setNumber(value);
+        break;
+      default:
+    }
   };
 
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
 
-    this.props.onFormHandler(this.state);
-    this.reset();
+    onFormHandler(name, number);
+    reset();
   };
 
-  reset = () => {
-    this.setState({ ...INITIAL_STATE });
+  const reset = () => {
+    setName(INITIAL.name);
+    setNumber(INITIAL.number);
   };
 
-  render() {
-    const { name, number } = this.state;
+  return (
+    <form className={css.contactForm} onSubmit={handleSubmit}>
+      <label htmlFor={nameInputId} className={css.inputBlock}>
+        Name
+        <input
+          type="text"
+          name="name"
+          id={nameInputId}
+          className={css.inputField}
+          value={name}
+          placeholder="Enter name"
+          // pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          // title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          // required
+          onChange={handleInputChange}
+        />
+      </label>
 
-    return (
-      <form className={css.contactForm} onSubmit={this.handleSubmit}>
-        <label htmlFor={this.nameInputId} className={css.inputBlock}>
-          Name
-          <input
-            type="text"
-            name="name"
-            id={this.nameInputId}
-            className={css.inputField}
-            value={name}
-            placeholder="Enter name"
-            // pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            // title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-            // required
-            onChange={this.handleInputChange}
-          />
-        </label>
+      <label htmlFor={numberInputId} className={css.inputBlock}>
+        Number
+        <input
+          type="tel"
+          name="number"
+          id={numberInputId}
+          className={css.inputField}
+          value={number}
+          placeholder="Enter the phone number"
+          // pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          // title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+          // required
+          onChange={handleInputChange}
+        />
+      </label>
 
-        <label htmlFor={this.numberInputId} className={css.inputBlock}>
-          Number
-          <input
-            type="tel"
-            name="number"
-            id={this.numberInputId}
-            className={css.inputField}
-            value={number}
-            placeholder="Enter the phone number"
-            // pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            // title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-            // required
-            onChange={this.handleInputChange}
-          />
-        </label>
-
-        <button type="submit">Add contact</button>
-      </form>
-    );
-  }
+      <button type="submit">Add contact</button>
+    </form>
+  );
 }
 
 ContactForm.propTypes = {
